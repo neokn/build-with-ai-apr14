@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"strconv"
@@ -213,6 +214,36 @@ model: googleai/gemini-3-flash-preview
 		tools = append(tools, setAgentNameTool)
 	}
 
+	// get_random_number: provides the LLM with a random number.
+	type randomArgs struct {
+		Min int `json:"min,omitempty" jsonschema:"Minimum value (inclusive). Defaults to 0."`
+		Max int `json:"max,omitempty" jsonschema:"Maximum value (exclusive). Defaults to 100."`
+	}
+	type randomResult struct {
+		Value int `json:"value"`
+	}
+	randomNumberTool, err := functiontool.New(
+		functiontool.Config{
+			Name:        "get_random_number",
+			Description: "Returns a random integer between min (inclusive) and max (exclusive).",
+		},
+		func(ctx tool.Context, args randomArgs) (randomResult, error) {
+			min := args.Min
+			max := args.Max
+			if max == 0 && min == 0 {
+				max = 100
+			}
+			if min >= max {
+				return randomResult{}, fmt.Errorf("min (%d) must be strictly less than max (%d)", min, max)
+			}
+			val := rand.IntN(max-min) + min
+			return randomResult{Value: val}, nil
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("creating random_number tool: %w", err)
+	}
+
 	// get_current_time: provides the LLM with accurate time information.
 	type timeArgs struct {
 		Timezone string `json:"timezone,omitempty" jsonschema:"IANA timezone such as Asia/Taipei. Defaults to Asia/Taipei if omitted."`
@@ -267,7 +298,7 @@ model: googleai/gemini-3-flash-preview
 		Model:       model,
 		Description: "A new agent that can be named and configured through conversation.",
 		Instruction: instruction,
-		Tools:       append(tools, currentTimeTool),
+		Tools:       append(tools, currentTimeTool, randomNumberTool),
 		Toolsets:    mcpToolsets,
 	})
 	if err != nil {

@@ -108,7 +108,7 @@ INFO telegram bot started
 > 💡 這個模式不需要 Telegram Token，只需要 Gemini API Key 就能使用。適合用來除錯與觀察。
 
 ```bash
-go run ./cmd/telegram/ web --port 9090 api webui --api_server_address http://localhost:9090/api
+go run ./cmd/telegram/ web --port 9999 api webui --api_server_address http://localhost:9999/api
 ```
 啟動後在瀏覽器打開 `http://localhost:9090` 就能看到 ADK 內建的開發者 UI，可以直接跟 Agent 對話、查看 Session 歷史、觀察 Tool 呼叫過程。
 
